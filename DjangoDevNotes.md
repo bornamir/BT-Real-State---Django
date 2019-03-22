@@ -233,7 +233,7 @@ but others may...
 
 ### apps.py
 
-It contains one class which name is the form AppnameConfig. This class should be added in the main settings.py file in the INSTALLED_APPS list. In this list, the name of the class should be addressed. For example for the *pages* app, string 'pages.apps.PagesConfig' should be added to list. This procedure will makes the django to recognize this app.
+It contains one class which name is the form AppnameConfig. This class should be added in the main settings.py file in the INSTALLED_APPS list. In this list, the name of the class should be addressed. For example for the *pages* app, the string 'pages.apps.PagesConfig' should be added to list. This procedure will makes the django to recognize this app.
 
 ### models.py
 
@@ -249,13 +249,13 @@ If you want to write methods and linking urls to them.
 
 
 
-## HomePage url
+## Adding pages
 
-For creating a new page(url), 2 main things should be done. First the url should be defined and second the url link (or point) to a method which create (render) the page and sends it to the user.
+For creating a new page(url or view), 2 main things should be done. First the url should be defined and second the url link (or point) to a method which create (render) the page and sends it to the user.
 
 ### Defining url (path)
 
-The first step is taking place in the urls.py file. In the *urlpatterns* list, the url pattern and the coresponding methods are defined with the *path* method. For example 
+The first step is taking place in the urls.py file in the main project folder. In the *urlpatterns* list, the url pattern and the coresponding methods are defined with the *path* method. For example 
 
 ``` python
 
@@ -266,9 +266,10 @@ urlpatterns = [
 
 the url : *IP_Address.com/* will triggers the index method in the views.py file.
 
-also we can group some urls and define them in a separate file. In this case, all the static pages such as home page or the about page are going to be in the *pages* app. So we create a local urls.py file in the *pages* app and then refrence to it in the main urls.py file as such:
+also we can group some urls and define them in a separate file. In this project, all the static pages such as home page or the about page are going to be in the *pages* app. So we create a local urls.py file in the *pages* app and then refrence to it in the main urls.py file as such:
 
 ``` python
+# urls.py file in the main project directory
 urlpatterns = [
     path('',include('pages.urls')),
     path('admin/', admin.site.urls),
@@ -277,7 +278,7 @@ urlpatterns = [
 
 Using the `incluse` methos, all the urls which defined in the urls.py in the pages directory (which is the pages app directory) will be included .
 
-It is important that all the urls should be define in a list called `urlspattern`  . Naming is important!
+It is important that all the urls should be define in a list called `urlspattern`  . **Naming is important!**
 
 ### Defining methods for urls
 
@@ -297,4 +298,143 @@ def index(req):
 the method `index` gets req( request) object which is the requset send form the user and then return a response ( or render a page) which is the view we want to be seen in the users browser. As you can notice, the code in the `HttpResponse` is in html format.
 
 
+
+## Templates for pages
+
+Instead of passing all the html codes to the `HttpResponse` , we can render it from a template html file.
+
+### Template directory
+
+In setting.py, there is a list called *TEMPLATES* and it has a *DIRS* which shows where the templates are.
+
+In this project, we put all the templates in a directory called *templates* in the main folder ( hence alongside with btre and pages app directory). 
+
+``` python
+# in setting.py file
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+Then all the files in the template directory are accessible and can be called in the methods, specially in the views methods.
+
+```python
+def about(req):
+    return render(req,'pages/about.html')
+```
+
+note: The *about.html* file is in the *templates/pages/about.html* . Not in the pages app directory.
+
+
+
+
+
+## Base Template
+
+There are a lot of codes repeating in all the pages such as the title, navbar and ... . So we can prevent repeating by using templates. Also base templates allows us to change this similar setting easily by changing them only in one place instead of changing in all the pages views ( or html code).
+
+First create the base html file and enter the custom code. Then there is a place where the variable codes ( specify by each page) is going to be placed. Enter the following jinja code:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>BT Real State</title>
+</head>
+<body>
+    {% block content %} {% endblock %} 	# Entet this where content coming from other templates
+</body>
+</html>
+```
+
+Then in each page that needs to extend the base template, add this:
+
+```html
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1> Put the page code here! </h1>
+
+{% endblock %}
+```
+
+
+
+## Static files
+
+In every project, there are some static files such as fonts, some pictures( backgrounds or logos), javascripts and css. 
+
+In this project css, javascripts, webfonts and pictures are added in the static folder.
+
+Also there are other static files which are produced by django. Such as admin pages file.
+
+### Collecting static files
+
+All the static files in the project can be collected and put in a directory. Then django reads and use this files for project.
+
+For collecting static files, first we should define a path for it, so all the statics will be put in there. Hence add *STATIC_ROOT* list variable in the settings.py file:
+
+```python
+
+# add this
+STATIC_ROOT= os.path.join(BASE_DIR, 'static')
+
+STATIC_URL = '/static/' # already exist
+```
+
+Then by running the following command (in the shell), django will find all the statics that are defined in the project and put it in the *STATIC_ROOT* path.
+
+```shell
+python manage.py collectstatic
+```
+
+### git_ignore notes
+
+The main static folder (static root) is not going to be in the git. Some of them are going to be generated by the apps and django itself and others are put in other static file directory ( in this project btre/static path).
+
+Hence add the */static* path to the .gitignore file.
+
+
+
+
+
+### static folder
+
+All the static files should be recognized by the django. In order to do this, we add *STATICFILES_DIRS* (which is a list containing all the paths having static files) in the settings.py file:
+
+```python
+STATIC_URL = '/static/'
+# define this list
+STATICFILES_DIRS= [
+    os.path.join(BASE_DIR, 'btre/static')
+]
+```
+
+Now all the files in the *btre/static* path, are recognized as statics.
+
+
+
+# useful notes
+
+In this section we are going to review some notes and techniques and methods useful in django programming. 
+
+### os.path.join( BASE_DIR , 'some_direcotry_in_project_folder')
+
+this method joins directories. The BASE_DIR variable is the project main folder directory. hence this method will return the path to a folder in the project folder.
 

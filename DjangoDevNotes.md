@@ -469,7 +469,7 @@ in the first line of html files. Then, for referencing a file
 </head>
 ```
 
- note that the *static* name is the name of the directory which we define. Not the static folder which is created by django when running the `collectstatic` command. Hence, the files which are in the btre/static directory are being read and not /static/ directory.
+ note that the *static* name is not the static folder which is created by django when running the `collectstatic` command. Hence, the files which are in the btre/static directory are being read and not /static/ directory.
 
 
 

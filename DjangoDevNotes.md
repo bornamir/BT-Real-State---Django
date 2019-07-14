@@ -778,6 +778,14 @@ $ python manage.py sqlmigrate listings 0001
 
 
 
+# Media
+
+for adding media files 
+
+see the lesson36.mp4
+
+needs more documentation!
+
 # Admin App
 
 For using the predefine admin app, there should be a user or superuser registered. 
@@ -806,6 +814,12 @@ admin.site.register(Listing)
 ```
 
 now if we go to `localhost:8000/admin` and enter as the superuser, we can access the Listing model and add/remove/edit data.
+
+
+
+## Changing admin area
+
+refer to lesson 37 for changing style  and lesson 38 for adding features like search and display information on every app.
 
 
 

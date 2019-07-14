@@ -175,7 +175,7 @@ it is created with the `runserver` command too.It is empty at the beginning. and
 
 Lets look at already existing files which were created by the `django-admin startproject` command more deeply.
 
-### settings.py
+### settings.py 
 
 Needs more description!
 
@@ -249,7 +249,7 @@ If you want to write methods and linking urls to them.
 
 
 
-## Adding pages
+# Adding pages
 
 For creating a new page(url or view), 2 main things should be done. First the url should be defined and second the url link (or point) to a method which create (render) the page and sends it to the user.
 
@@ -471,6 +471,344 @@ in the first line of html files. Then, for referencing a file
 
  note that the *static* name is not the static folder which is created by django when running the `collectstatic` command. Hence, the files which are in the btre/static directory are being read and not /static/ directory.
 
+# Database : PostgreSQL
+
+As it was mentioned earlier, sqlite is not popular for real application. Mostly for tests and very small websites with low traffic. Hence we need to use another database system. Here we use postgresql.
+
+## Installing Postgresql on linux arch
+
+
+
+Refer to [this](https://wiki.archlinux.org/index.php/PostgreSQL) link from arch wiki and [this](https://www.postgresql.org/docs/current/app-createuser.html) link from postgresql documentation. A summery of these links are here:
+
+### Installation
+
+[Install](https://wiki.archlinux.org/index.php/Install) the [postgresql](https://www.archlinux.org/packages/?name=postgresql) package. It will also create a system user called *postgres*.
+
+**Note:** Commands that should be run as the *postgres* user are prefixed by `[postgres]$` in this article.
+
+You can switch to the PostgreSQL user by executing the following command:
+
+- If you have [sudo](https://wiki.archlinux.org/index.php/Sudo) and are in [sudoers](https://wiki.archlinux.org/index.php/Sudoers):
+
+```
+$ sudo -iu postgres
+```
+
+- Otherwise using [su](https://wiki.archlinux.org/index.php/Su):
+
+```
+$ su
+# su -l postgres
+```
+
+See [sudo(8)](https://jlk.fjfi.cvut.cz/arch/manpages/man/sudo.8) or [su(1)](https://jlk.fjfi.cvut.cz/arch/manpages/man/su.1) for their usage.
+
+### Initial configuration
+
+Before PostgreSQL can function correctly, the database cluster must be initialized:
+
+```
+[postgres]$ initdb -D /var/lib/postgres/data
+```
+
+Where `-D` is the default location where the database cluster must be stored (see [#Change default data directory](https://wiki.archlinux.org/index.php/PostgreSQL#Change_default_data_directory) if you want to use a different one).
+
+Many lines should now appear on the screen with several ending by `... ok`
+
+If these are the kind of lines you see, then the process succeeded. Return to the regular user using `exit`.
+
+Finally, [start](https://wiki.archlinux.org/index.php/Start) and [enable](https://wiki.archlinux.org/index.php/Enable) the `postgresql.service`.
+
+### Create your first database/user
+
+**Tip:** If you create a PostgreSQL user with the same name as your Linux username, it allows you to access the PostgreSQL database shell without having to specify a user to login (which makes it quite convenient).
+
+Become the postgres user. Add a new database user using the [createuser](https://www.postgresql.org/docs/current/static/app-createuser.html) command:
+
+```
+[postgres]$ createuser --interactive
+```
+
+or for creating super user with createrole and createdb privileges.
+
+``` 
+createuser -s -r -d
+```
+
+
+
+Create a new database over which the above user has read/write privileges using the [createdb](https://www.postgresql.org/docs/current/static/app-createdb.html) command (execute this command from your login shell if the database user has the same name as your Linux user, otherwise add `-O *database-username*` to the following command):
+
+```
+$ createdb myDatabaseName
+```
+
+**Tip:** If you did not grant your new user database creation privileges, add `-U postgres` to the previous command.
+
+### Familiarize with PostgreSQL
+
+**Access the database shell**
+
+Become the postgres user. Start the primary database shell, [psql](https://www.postgresql.org/docs/current/static/app-psql.html), where you can do all your creation of databases/tables, deletion, set permissions, and run raw SQL commands. Use the `-d` option to connect to the database you created (without specifying a database, `psql` will try to access a database that matches your username).
+
+```
+[postgres]$ psql -d myDatabaseName
+```
+
+Some helpful commands:
+
+Get help:
+
+```
+=> \help
+```
+
+Connect to a particular database:
+
+```
+=> \c <database>
+```
+
+List all users and their permission levels:
+
+```
+=> \du
+```
+
+Show summary information about all tables in the current database:
+
+```
+=> \dt
+```
+
+Exit/quit the `psql` shell:
+
+```
+=> \q or CTRL+d
+```
+
+There are of course many more meta-commands, but these should help you get started. To see all meta-commands run:
+
+```
+=> \?
+```
+
+
+
+## Connecting PostgreSQL to django
+
+There several steps for connecting postgreSQL to django:
+
+### pip
+
+Install these two packages:
+
+``` 
+pip install psycopg2
+pip install psycopg2-binary
+```
+
+
+
+### Settings.py
+
+In the DATABASE dictionary, change:
+
+``` 
+# Database
+# https://docs.djangoproject.com/en/2.1/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+
+
+```
+
+to this:
+
+``` 
+
+# Database
+# https://docs.djangoproject.com/en/2.1/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME':'btredb',
+        'USER': 'borna',
+        'PASSWORD':'password_of_database_for_this_user',
+        'HOST': 'localhost'
+    }
+}
+
+```
+
+
+
+
+
+# Migration
+
+migration will send data such as users to the database. Apps like admin are predefine and ready to be migrated, meaning ready to be put in the database. Till now our database was not ready. But now that we have setup the database we can migrate the apps to it.
+
+simply run:
+
+```
+python manage.py migrate
+```
+
+Running this command at this point will result in :
+
+```shell
+# borna @ bmapc in ~/MyProjects/PytonDevDjango on git:master x [22:25:43] 
+$ python manage.py migrate 
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying sessions.0001_initial... OK
+
+```
+
+note that apps such as admin and auth have been migrated. But pages or listings have not.
+
+Also we can check our postgres database to see the changes.
+
+
+
+# Defining Models
+
+For every app created, a `model.py` file will be created too.
+
+In this file, create a class which extends the `models.Model` class of django. Then this class will create a table in database and store all the data related to it.
+
+A sample model created for listings in this project :
+
+```python
+from django.db import models
+from realtors.models import Realtor
+from datetime import datetime
+# Create your models here.
+
+
+class Listing(models.Model):
+    realtor = models.ForeignKey(Realtor, on_delete = models.DO_NOTHING)
+    title = models.CharField(max_length = 200)
+    address = models.CharField(max_length = 200)
+    city = models.CharField(max_length = 100)
+    state = models.CharField(max_length = 100)
+    zipcode = models.CharField(max_length = 20)
+    # description is optional. this is done by 'blank = True' part
+    description = models.TextField(blank=True)
+    price = models.IntegerField()
+    bedrooms = models.IntegerField()
+    bathrooms = models.DecimalField(max_digits=3,decimal_places=1)
+    # setting a defualt value of 0 for garage
+    garage = models.IntegerField(default=0)
+    sqft = models.IntegerField()    # sqft = squre feet
+    # lot size is decimal with only one decimal places and 4 integer digit
+    lot_size = models.DecimalField(max_digits=6,decimal_places=1)
+    photo_main = models.ImageField(upload_to='photos/%Y/%m/%d')
+    photo_1 = models.ImageField(upload_to='photos/%Y/%m/%d')
+    photo_2 = models.ImageField(upload_to='photos/%Y/%m/%d')
+    photo_3 = models.ImageField(upload_to='photos/%Y/%m/%d')
+    photo_4 = models.ImageField(upload_to='photos/%Y/%m/%d')
+    is_published = models.BooleanField(default=True)
+    list_date = models.DateTimeField(default=datetime.now,blank=True)
+
+    ## for default property showing in admin area
+    def __str__(self):
+        return self.title
+
+```
+
+note: for using the ImageField, `pillow` package should be installed by `pip`
+
+```bash
+$ pip install pillow
+```
+
+make sure to be in your virtualenv before running this command.
+
+
+
+## migration
+
+After creating the model class for an app, we can add it to database using migration.
+
+first the apps should be added to migration list. this is done by running the `makemigration` command available by the `manage.py`:
+
+``` bash
+$ python manage.py makemigration
+```
+
+This will create a python file for each app in its migration folder. For example in listings/migration the 0001.py was created.
+
+Then running `migrate` will add the apps to the database and can be  seen and accessed with pgadmin or postgresql.
+
+``` bash
+$ ptyhon manage.py migrate
+```
+
+##  SQL
+
+running migration means that a sql script is run in the database. By running the following command, you can see the sql script wich is used to create tables in database:
+
+``` bash
+$ python manage.py sqlmigrate listings 0001
+```
+
+
+
+# Admin App
+
+For using the predefine admin app, there should be a user or superuser registered. 
+
+## Creating superuser
+
+``` bash
+$ python manage.py creatsuperuser
+```
+
+Now we have access to admin page `localhost:8000/admin` with the superuser info created.
+
+Here we can change some fundamental predefine properties of our site.
+
+## Adding models to admin area
+
+In the predefine admin page, there only Groups and Users models which can be accessed and changed. But any app could be added to this area too.
+
+For adding an app, we should change the admin.py file of each app and add the model to it:
+
+``` python
+from django.contrib import admin
+from .models import Listing
+# Register your models here.
+admin.site.register(Listing)
+```
+
+now if we go to `localhost:8000/admin` and enter as the superuser, we can access the Listing model and add/remove/edit data.
+
+
+
 
 
 # useful notes/tips
@@ -488,6 +826,14 @@ It is a String variable containing the project path. To point to a folder in the
 ```python
     os.path.join(BASE_DIR, 'btre/static')
 ```
+
+This variable is defined in the *settings.py* file:
+
+```
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+```
+
+
 
 ## jinja syntax
 

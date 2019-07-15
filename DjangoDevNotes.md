@@ -849,6 +849,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 
+
+
+# Pagination
+
+For making pages… use [this](https://docs.djangoproject.com/en/2.2/topics/pagination/) link for description or lesson 41
+
 ## jinja syntax
 
 used by django and can be read in the html files.
@@ -860,3 +866,14 @@ Refer to [this](https://docs.djangoproject.com/en/2.2/ref/templates/builtins/#st
 django ships with lots of useful tags such as if statements, cycles and ... .
 
   
+
+## humanize app
+
+this is a built-in app which is not loaded by default. Just add it in the settings.py in the install app section and then load it in the html file and use it in the {{}} fromat or pipeline it with other variables or functions.
+
+```html
+<span class="badge badge-secondary text-white">${{ listing.price | intcomma }} </span>
+```
+
+
+
